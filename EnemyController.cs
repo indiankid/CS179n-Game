@@ -36,14 +36,22 @@ public class EnemyController : MonoBehaviour
     private Vector2 velocity2;
     public float patrolSpeed;
     public float Yspeed;
+    private Animator anim;
+    private SpriteRenderer sr;
     // Start is called before the first frame update
     void Start()
     {
+
+        sr = GetComponent<SpriteRenderer>();
         rb = GetComponent<Rigidbody2D>();
+        anim = GetComponent<Animator>();
         playerDetected = false;
+        anim.SetBool("playerDetected", false);
+        anim.SetBool("InAttackRange", false);
         velocity = new Vector2(chaseSpeed, Yspeed);
         velocity2 = new Vector2(-chaseSpeed, Yspeed);
-}
+        anim.SetBool("isDead", false);
+    }
 
     // Update is called once per frame
     void Update()
@@ -57,7 +65,16 @@ public class EnemyController : MonoBehaviour
         {
             //chase player
             playerDetected = true;
+            anim.SetBool("playerDetected", true);
             //ChasePlayer();
+        }
+        if (distToPlayer <= 5.3)
+        {
+            anim.SetBool("InAttackRange", true);
+        }
+        else if (distToPlayer > 5.3)
+        {
+            anim.SetBool("InAttackRange", false);
         }
         if (playerDetected == true)
         {
@@ -79,7 +96,7 @@ public class EnemyController : MonoBehaviour
 
         if (transform.position.x < player.position.x)           //if player is right of the enemy
         {
-
+            sr.flipX = true;
             //rb.velocity = Vector2.right * chaseSpeed;
             //rb.velocity = new Vector2(chaseSpeed, Yspeed);
             //rb.MovePosition((Vector2)transform.position + (velocity * Time.deltaTime));
@@ -98,6 +115,7 @@ public class EnemyController : MonoBehaviour
         else if (transform.position.x > player.position.x)      //if player is to the left of the enemy
         {
             //rb.velocity = new Vector2(-chaseSpeed, Yspeed);
+            sr.flipX = false;
             rb.AddForce(Vector2.left * chaseSpeed, ForceMode2D.Impulse);
            /* if (downCheck.collider == false)
             {
@@ -119,11 +137,13 @@ public class EnemyController : MonoBehaviour
         {
             if (movingRight)
             {
+                sr.flipX = false;
                 transform.eulerAngles = new Vector3(0, -180, 0);
                 movingRight = false;
             }
             else
             {
+                //sr.flipX = true;
                 transform.eulerAngles = new Vector3(0, 0, 0);
                 movingRight = true;
             }
@@ -182,6 +202,7 @@ public class EnemyController : MonoBehaviour
     void Die()
     {
         //Instantiate(deathEffect, transform.position, Quaternion.identity);
+        anim.SetBool("isDead", true);
         Destroy(gameObject);
     }
     
