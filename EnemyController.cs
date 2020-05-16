@@ -24,7 +24,7 @@ public class EnemyController : MonoBehaviour
     public float jumpForce;
     public float doubleJumpForce;
     public float rayDist;
-    private bool movingRight;
+    private bool facingLeft;
     public BoxCollider2D box1;  //check platforms
     public BoxCollider2D box2;  //check player
     public BoxCollider2D box3;  //check player
@@ -38,6 +38,7 @@ public class EnemyController : MonoBehaviour
     public float Yspeed;
     private Animator anim;
     private SpriteRenderer sr;
+    private int sign = -1;
     // Start is called before the first frame update
     void Start()
     {
@@ -51,15 +52,19 @@ public class EnemyController : MonoBehaviour
         velocity = new Vector2(chaseSpeed, Yspeed);
         velocity2 = new Vector2(-chaseSpeed, Yspeed);
         anim.SetBool("isDead", false);
+        sr.flipX = false;
+        facingLeft = true;
+        
     }
 
     // Update is called once per frame
-    void Update()
+    void FixedUpdate()
     {
+        print("Patrolspeed = 9, actual speed =" + rb.velocity.x);
         
         //distance to player
         float distToPlayer = Vector2.Distance(transform.position, player.position);
-        print("Dist to player" + distToPlayer + "Player detected" + playerDetected);
+        //print("Dist to player" + distToPlayer + "Player detected" + playerDetected);
 
         if (distToPlayer < agroRange)
         {
@@ -84,6 +89,8 @@ public class EnemyController : MonoBehaviour
         {
             idle();
         }
+        
+        //idle();
     }
     
     void ChasePlayer()
@@ -96,59 +103,120 @@ public class EnemyController : MonoBehaviour
 
         if (transform.position.x < player.position.x)           //if player is right of the enemy
         {
-            sr.flipX = true;
-            //rb.velocity = Vector2.right * chaseSpeed;
-            //rb.velocity = new Vector2(chaseSpeed, Yspeed);
-            //rb.MovePosition((Vector2)transform.position + (velocity * Time.deltaTime));
-            rb.AddForce(Vector2.right * chaseSpeed, ForceMode2D.Impulse);
-            /*if (downCheck.collider == false)
+            if( facingLeft == true)
             {
-                if ((leftCheck.collider == true) || (rightCheck.collider == true))           //if there is no more platform area left:
-                {
-                    rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
-
-                }
+                facingLeft = false;
+                sr.flipX = true;
             }
-            */
+            moveSpeed(1, chaseSpeed);
+            cappedVelocity(chaseSpeed);
+
+
         }
 
         else if (transform.position.x > player.position.x)      //if player is to the left of the enemy
         {
-            //rb.velocity = new Vector2(-chaseSpeed, Yspeed);
-            sr.flipX = false;
-            rb.AddForce(Vector2.left * chaseSpeed, ForceMode2D.Impulse);
-           /* if (downCheck.collider == false)
+            if (facingLeft == false)
             {
-                if ((leftCheck.collider == true) || (rightCheck.collider == true))           //if there is no more platform area left:
-                {
-                    rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
-                }
+                facingLeft = true;
+                sr.flipX = false;
             }
-            */
+            moveSpeed(-1, chaseSpeed);
+            cappedVelocity(chaseSpeed);
         }
     }
     
+    void moveSpeed(int sign, float speed)
+    {
+        if( sign < 0) { 
+        rb.AddForce(Vector2.left * speed * 2f, ForceMode2D.Impulse);
+        rb.AddForce(Vector2.left * speed, ForceMode2D.Impulse);
+        }
+        else
+        {
+            rb.AddForce(Vector2.right * speed * 2f, ForceMode2D.Impulse);
+            rb.AddForce(Vector2.right * speed, ForceMode2D.Impulse);
+        }
+    }
+    void cappedVelocity(float speed)
+    {
+        float cappedPatrol = Mathf.Min(Mathf.Abs(rb.velocity.x), speed) * Mathf.Sign(rb.velocity.x);
+        //rb.AddForce(Vector2.left * cappedPatrol, ForceMode2D.Impulse);
+        rb.velocity = new Vector2(cappedPatrol, rb.velocity.y);
+    }
     void idle()
     {
-        rb.transform.Translate(Vector2.right * patrolSpeed * Time.deltaTime);
-        RaycastHit2D groundCheck = Physics2D.Raycast(groundDetect.position, Vector2.down, rayDist);
-
-        if (groundCheck.collider == false)
+        
+        //rb.transform.Translate(Vector2.right * patrolSpeed * Time.deltaTime);
+        //RaycastHit2D groundCheck = Physics2D.Raycast(groundDetect.position, Vector2.down, rayDist);
+        RaycastHit2D leftCheck = Physics2D.Raycast(leftDetect.position, Vector2.left, xaxisDist);
+        RaycastHit2D rightCheck = Physics2D.Raycast(rightDetect.position, Vector2.right, xaxisDist);
+        
+        if (rb.velocity.x == 0)
         {
-            if (movingRight)
+            if (leftCheck.collider == true)
             {
-                sr.flipX = false;
-                transform.eulerAngles = new Vector3(0, -180, 0);
-                movingRight = false;
+                rb.AddForce(Vector2.right * patrolSpeed, ForceMode2D.Impulse);
+                facingLeft = false;
+            }
+            else if (rightCheck.collider == true)
+            {
+                rb.AddForce(Vector2.left * patrolSpeed, ForceMode2D.Impulse);
+                facingLeft = true;
             }
             else
             {
-                //sr.flipX = true;
-                transform.eulerAngles = new Vector3(0, 0, 0);
-                movingRight = true;
+                rb.AddForce(Vector2.left * patrolSpeed, ForceMode2D.Impulse);
+                facingLeft = true;
             }
         }
+        if (facingLeft == true)
+        {
+            if (leftCheck.collider == true)
+            {
+                //print("Left works");
+                moveSpeed(1, patrolSpeed);
+                cappedVelocity(patrolSpeed);
+                sr.flipX = true;
+                facingLeft = false;
+                /*transform.eulerAngles = new Vector3(0, -180, 0);
+                movingRight = false;
+                */
+                //rb.AddForce(Vector2.right * patrolSpeed, ForceMode2D.Impulse);
+            }
+            else
+            {
+                sr.flipX = false;
+                //transform.eulerAngles = new Vector3(0, 0, 0);
+                //movingRight = true;
+            }
+        }
+        if (facingLeft == false)
+        {
+            if (rightCheck.collider == true)
+            {
+                //print("right works");
+                moveSpeed(-1, patrolSpeed);
+                cappedVelocity(patrolSpeed);
+                sr.flipX = false;
+                facingLeft = true;
+                /*transform.eulerAngles = new Vector3(0, -180, 0);
+                movingRight = false;
+                */
+                //rb.AddForce(Vector2.right * patrolSpeed, ForceMode2D.Impulse);
+            }
+            else
+            {
+                sr.flipX = true;
+                //transform.eulerAngles = new Vector3(0, 0, 0);
+                //movingRight = true;
+            }
+        }
+        
+
     }
+
+    
    void OnTriggerEnter2D(Collider2D col)
    {
         switch (col.tag)
@@ -165,28 +233,6 @@ public class EnemyController : MonoBehaviour
 
 
         }
-        /*
-        if(col == box1)
-        {
-            switch (col.tag)
-            {
-            case "Platform":
-                rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
-                break;
-            }
-
-        }
-        if ((col == box2) || (col == box3))
-        {
-            switch (col.tag)
-            {
-                case "Player":
-                    rb.AddForce(Vector2.up * doubleJumpForce, ForceMode2D.Impulse);
-                    break;
-            }
-
-        }
- */
     }
     
     public void TakeDamage()
@@ -207,29 +253,3 @@ public class EnemyController : MonoBehaviour
     }
     
 }
-
-
-/* void idle()
-    {
-        //rb.MovePosition(rb.position * velocity * Time.deltaTime);
-        //rb.MovePosition((Vector2)transform.position + (velocity * Time.deltaTime));
-        rb.velocity = new Vector2(patrolSpeed, Yspeed);
-        RaycastHit2D groundCheck = Physics2D.Raycast(groundDetect.position, Vector2.down, rayDist);
-
-        if (groundCheck.collider == false)
-        {
-            if (movingRight)
-            {
-
-                //rb.MovePosition((Vector2)transform.position +  (velocity2 * Time.deltaTime));
-                rb.AddForce(Vector2.up * jumpForce);
-                movingRight = false;
-            }
-            else
-            {
-                // rb.MovePosition((Vector2)transform.position + (velocity * Time.deltaTime));
-                rb.AddForce(Vector2.up * jumpForce);
-                movingRight = true;
-            }
-        }
-    } */
