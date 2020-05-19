@@ -54,27 +54,32 @@ public class PlayerController : MonoBehaviour
         
         
         rb.velocity = new Vector2(moveSpeed * moveInput, rb.velocity.y);
-        sr.flipX = flipCharacter(moveInput);
+        //sr.flipX = 
+        flipCharacter(moveInput);
         //ShootingArmsr.flipY = flipCharacter(moveInput);
         //shootingArmtr.position = new Vector3(shootingArmtr.position.x * -1, shootingArmtr.position.y, shootingArmtr.position.z);
 
 
     }
-    bool flipCharacter(float input)
+    void flipCharacter(float input)
     {
         if(input > 0)
         {
-            faceLeft = false;
+            //faceLeft = false;
+            transform.localScale = new Vector3(1, 1, 1);
         }
         else if(input < 0)
         {
-            faceLeft = true;
+            //faceLeft = true;
+            transform.localScale = new Vector3(-1, 1, 1);
         }
+        /*
         else
         {
             faceLeft = faceLeft;
         }
-        return faceLeft;
+        */
+        //return faceLeft;
         //  Vector3 scaler = transform.localScale;      //scaler to modify the current character's xzy values
         // scaler.x *= -1;                             //set the x scale to reverse of what it currently is
     }
