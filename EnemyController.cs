@@ -21,6 +21,7 @@ public class EnemyController : MonoBehaviour
     private Animator anim;
     private bool enemydead;
     public float attackRange;
+    public float enemyPlayerDist;
     // Start is called before the first frame update
     void Start()
     {
@@ -84,19 +85,20 @@ public class EnemyController : MonoBehaviour
     void ChasePlayer()
     {
 
-        if (transform.position.x < player.position.x)           //if player is right of the enemy
+        if (transform.position.x < (player.position.x - enemyPlayerDist))           //if player is right of the enemy
         {
             transform.localScale = new Vector3(-1, 1, 1);
             moveSpeed(1, chaseSpeed);
             cappedVelocity(chaseSpeed);
         }
 
-        else if (transform.position.x > player.position.x)      //if player is to the left of the enemy
+        else if (transform.position.x > (player.position.x + enemyPlayerDist))      //if player is to the left of the enemy
         {
             transform.localScale = new Vector3(1, 1, 1);
             moveSpeed(-1, chaseSpeed);
             cappedVelocity(chaseSpeed);
         }
+
     }
     
     void moveSpeed(int sign, float speed)
@@ -181,6 +183,7 @@ public class EnemyController : MonoBehaviour
                     break;
                 case "Bullet":
                     Destroy(col.gameObject);
+                    playerDetected = true;
                     //Destroy(gameObject);
                     TakeDamage();
                     break;
