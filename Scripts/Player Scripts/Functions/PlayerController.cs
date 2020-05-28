@@ -18,7 +18,7 @@ public class PlayerController : MonoBehaviour
     //public GameObject ShootingArm;
     //private SpriteRenderer ShootingArmsr;
     //private Transform shootingArmtr;
-    private bool faceLeft = false;
+    //private bool faceLeft = false;
     // Start is called before the first frame update
     void Start()
     {
@@ -49,6 +49,7 @@ public class PlayerController : MonoBehaviour
     }
     void FixedUpdate()
     {
+
         onGround = Physics2D.OverlapCircle(groundCheck.position, checkRadius, selectGround);
         moveInput = Input.GetAxis("Horizontal");            //get the input for x-scale--- -1 means move left, 1 means move right
         
